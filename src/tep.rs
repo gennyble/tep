@@ -108,7 +108,11 @@ impl Tep {
 			let mut encoder = Encoder::new(bufw, self.width as u32, self.height as u32);
 			encoder.set_color(png::ColorType::Indexed);
 			encoder.set_depth(png::BitDepth::Eight);
-			encoder.set_trns(trns);
+
+			if !trns.is_empty() {
+				encoder.set_trns(trns);
+			}
+
 			encoder.set_palette(palette);
 
 			let mut writer = encoder
