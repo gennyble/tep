@@ -3,7 +3,7 @@ me: "it's called tep"
 
 friend: "what inspired that? anything in particular?"
 
-me:
+me:  
 💭 TeX -> ReX  
 💭 Does TeX actually stand for anything? I want it to mean like Raster blah blah if TeX means Text blah blah.  
 checks wikipedia  
