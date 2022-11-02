@@ -17,7 +17,7 @@ impl CliArgs {
 		let args: Vec<String> = std::env::args().skip(1).collect();
 
 		let mut opts = Options::new();
-		opts.optopt("p", "palette", "Path to a fi", "PATH");
+		opts.optopt("p", "palette", "Use the palette at the provided path instead of the on in the image file. If there is a palette in the image file it's thrown out.", "PATH");
 		opts.optflag("h", "help", "Print this message");
 		let matches = opts.parse(&args)?;
 

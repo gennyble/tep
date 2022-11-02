@@ -1,18 +1,25 @@
 use std::{
-	collections::HashMap,
 	fs::File,
 	io::BufWriter,
 	str::{FromStr, Lines},
 };
 
 use camino::Utf8Path;
-use png::{Encoder, Writer};
+use png::Encoder;
 
 pub struct Palette {
 	colours: Vec<ColourDefinition>,
 }
 
 impl Palette {
+	pub fn file<P: AsRef<Utf8Path>>(path: P) -> Result<Self, Error> {
+		let string = std::fs::read_to_string(path.as_ref()).map_err(|e| Error::FileRead {
+			path: path.as_ref().to_string(),
+			error: Box::new(e),
+		})?;
+		string.parse()
+	}
+
 	fn parse_colour_definition(s: &str) -> Result<ColourDefinition, Error> {
 		let trimmed = s.trim();
 
@@ -100,10 +107,41 @@ impl Tep {
 			error: Box::new(e),
 		})?;
 		let mut lines = string.lines();
-		let mut palette = Palette::parse_from_file_lead(&mut lines)?;
+		let palette = Palette::parse_from_file_lead(&mut lines)?;
+		Self::parse_image(&mut lines, palette)
+	}
 
+	pub fn with_palette<P: AsRef<Utf8Path>>(palette: Palette, path: P) -> Result<Self, Error> {
+		let string = std::fs::read_to_string(path.as_ref()).map_err(|e| Error::FileRead {
+			path: path.as_ref().to_string(),
+			error: Box::new(e),
+		})?;
+		let mut lines = string.lines().peekable();
+
+		// Get rid of a leading palette attatched to the image
+		loop {
+			match lines.peek() {
+				None => break,
+				Some(line) => {
+					if line.contains(':') || line.is_empty() {
+						// Throw away the line
+						lines.next();
+						continue;
+					} else {
+						break;
+					}
+				}
+			}
+		}
+
+		Self::parse_image(&mut lines, palette)
+	}
+
+	fn parse_image<'a, I>(lines: &mut I, palette: Palette) -> Result<Self, Error>
+	where
+		I: Iterator<Item = &'a str>,
+	{
 		let mut lines = lines.enumerate();
-
 		let mut data = vec![];
 		let mut width = None;
 		let mut height = 0;
