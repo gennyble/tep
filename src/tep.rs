@@ -1,10 +1,92 @@
-use std::{collections::HashMap, fs::File, io::BufWriter, str::FromStr};
+use std::{
+	collections::HashMap,
+	fs::File,
+	io::BufWriter,
+	str::{FromStr, Lines},
+};
 
 use camino::Utf8Path;
 use png::{Encoder, Writer};
 
-pub struct Tep {
+pub struct Palette {
 	colours: Vec<ColourDefinition>,
+}
+
+impl Palette {
+	fn parse_colour_definition(s: &str) -> Result<ColourDefinition, Error> {
+		let trimmed = s.trim();
+
+		match trimmed.split_once(':') {
+			None => Err(Error::MalformedColourDefinition {
+				raw: trimmed.to_string(),
+			}),
+			Some((ident, colour)) => {
+				let ident = ident.trim();
+				let colour = colour.trim();
+
+				if ident.len() != 1 {
+					Err(Error::MalformedColourDefinition {
+						raw: trimmed.to_string(),
+					})
+				} else {
+					let ident = ident.chars().next().unwrap();
+					let colour = colour
+						.parse()
+						.map_err(|e| Error::malformed_colour(ident, e))?;
+
+					Ok(ColourDefinition { ident, colour })
+				}
+			}
+		}
+	}
+
+	fn parse_from_file_lead<'a>(lines: &mut Lines<'a>) -> Result<Self, Error> {
+		let mut palette_lines = String::new();
+
+		loop {
+			match lines.next() {
+				None => return Err(Error::NoImage),
+				Some(line) if line.is_empty() => {
+					break;
+				}
+				Some(line) => palette_lines.push_str(&format!("{}\n", line)),
+			}
+		}
+
+		palette_lines.parse()
+	}
+
+	fn get(&self, ident: char) -> Option<Colour> {
+		self.colours
+			.iter()
+			.find(|cd| cd.ident == ident)
+			.map(|cd| cd.colour)
+	}
+}
+
+impl FromStr for Palette {
+	type Err = Error;
+
+	fn from_str(s: &str) -> Result<Self, Self::Err> {
+		let mut lines = s.lines().enumerate();
+		let mut colours = vec![];
+
+		loop {
+			match lines.next() {
+				None => break,
+				Some((_ln, line)) => {
+					let def = Self::parse_colour_definition(line)?;
+					colours.push(def);
+				}
+			}
+		}
+
+		Ok(Self { colours })
+	}
+}
+
+pub struct Tep {
+	palette: Palette,
 
 	width: usize,
 	height: usize,
@@ -17,25 +99,10 @@ impl Tep {
 			path: path.as_ref().to_string(),
 			error: Box::new(e),
 		})?;
-		let mut lines = string.lines().enumerate();
+		let mut lines = string.lines();
+		let mut palette = Palette::parse_from_file_lead(&mut lines)?;
 
-		let mut colours_string = String::new();
-		let mut colours = vec![];
-		loop {
-			match lines.next() {
-				None => {
-					return Err(Error::NoImage);
-				}
-				Some((_ln, line)) if line.is_empty() => {
-					break;
-				}
-				Some((_ln, line)) => {
-					let def = Self::parse_colour_definition(line)?;
-					colours_string.push(def.ident);
-					colours.push(def);
-				}
-			}
-		}
+		let mut lines = lines.enumerate();
 
 		let mut data = vec![];
 		let mut width = None;
@@ -59,7 +126,7 @@ impl Tep {
 					}
 
 					for (idx, ch) in line.chars().enumerate() {
-						if colours_string.contains(ch) {
+						if palette.get(ch).is_some() {
 							data.push(ch);
 						} else {
 							return Err(Error::UnknownIdentifier {
@@ -79,7 +146,7 @@ impl Tep {
 			return Err(Error::NoImage);
 		} else {
 			Ok(Self {
-				colours,
+				palette,
 				width: width.unwrap(),
 				height,
 				data,
@@ -88,7 +155,7 @@ impl Tep {
 	}
 
 	pub fn save_as_png<P: AsRef<Utf8Path>>(&self, path: P) -> Result<(), Error> {
-		let mut colours = self.colours.clone();
+		let mut colours = self.palette.colours.clone();
 
 		// We're sorting by the alpha channel so that all of the transparent values come before the perfectly
 		// opaque ones. This is neccesary for creating the PNG tRNS block for paletted images
@@ -168,33 +235,6 @@ impl Tep {
 		}
 
 		alphas
-	}
-
-	fn parse_colour_definition(s: &str) -> Result<ColourDefinition, Error> {
-		let trimmed = s.trim();
-
-		match trimmed.split_once(':') {
-			None => Err(Error::MalformedColourDefinition {
-				raw: trimmed.to_string(),
-			}),
-			Some((ident, colour)) => {
-				let ident = ident.trim();
-				let colour = colour.trim();
-
-				if ident.len() != 1 {
-					Err(Error::MalformedColourDefinition {
-						raw: trimmed.to_string(),
-					})
-				} else {
-					let ident = ident.chars().next().unwrap();
-					let colour = colour
-						.parse()
-						.map_err(|e| Error::malformed_colour(ident, e))?;
-
-					Ok(ColourDefinition { ident, colour })
-				}
-			}
-		}
 	}
 }
 
