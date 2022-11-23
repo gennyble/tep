@@ -1,6 +1,6 @@
 [package]
 version = "0.1.0"
-name = "tep"
+name = "tepimg"
 description = "Simple template library"
 repository = "https://github.com/gennyble/tep"
 license-file = "LICENSE"

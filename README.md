@@ -13,14 +13,16 @@ b w b w b w
 
 The spaces are optional but let it stay at least a little more square than it could be in whatever font this is than I'm using.
 
-Install it like:
+Install it with
 ```
-cargo install tep
+cargo install tepimg
 ```
-or clone the repo down and
+or clone it down and
 ```
 cargo install --path tep
 ```
+
+Both of which give you a binary named `tepimg`
 
 ### Valid colour definitions
 short gray: `#1` becomes `#111111`  
