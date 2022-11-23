@@ -22,17 +22,17 @@ or clone it down and
 cargo install --path tep
 ```
 
-And you use it like this:
+### Usage
+
 ```
 tepimg tests/standard.tep tests/standard.png
 ```
 
-Or you can save the palette in a different file and do:
-```
-tepimg -p tests/standard_palette tests/standard.tep tests/standard.tep
-```
+Or, if you want to share a palette between images, you can pass it in separate. The palette provided with `-p` will be used instead of any palette in the image.
 
-Do note that if the input tep file has a palette in it, the one passed with `-p` will be used instead.
+```
+tepimg -p tests/standard_palette tests/standard.tep tests/standard.png
+```
 
 ### Valid colour definitions
 short gray: `#1` becomes `#111111`  
