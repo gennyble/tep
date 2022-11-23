@@ -1,3 +1,5 @@
+I made this because I didn't have an image editor of any sort on my machine and I just needed to make a few little pixel art things for a project I was working on. Instead of trying to find an image editor for MacOS that I liked, I just made this. It's small and cute and I like it and I hope you do, too.
+
 tep lets you make little pixel art images in a file and then compile them to images. See:
 ```
 w: #FFF
@@ -11,7 +13,7 @@ w b w b w b
 b w b w b w
 ```
 
-The spaces are optional but let it stay at least a little more square than it could be in whatever font this is than I'm using.
+The spaces are optional but let it stay at least a little more square than it could be in whatever font this is that I'm using.
 
 Install it with
 ```
