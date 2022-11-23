@@ -34,20 +34,22 @@ b w b w b w
 The spaces are optional but let it stay at least a little more square than it could be in whatever font this is than I'm using.
 
 Valid color definitions:  
-#### `short gray`: `#1`
+##### `short gray`: `#1`
 This expands to `#111111`
 
-#### `long gray`: `#12`
+##### `long gray`: `#12`
 This expands to `#121212`
 
-#### `short rgb`: `#abc`
+##### `short rgb`: `#abc`
 This expands to `#aabbcc`
 
-#### `short rgba`: `#abcd`
+##### `short rgba`: `#abcd`
 This expands to `#aabbccdd`
 
-#### `long rgb`: `#abcdef`
+##### `long rgb`: `#abcdef`
 This is probably how you're used to seeing hex colours
 
-#### `long rgba`: `#abcdef12`
+##### `long rgba`: `#abcdef12`
 This is probably how you're used to seeing RGBA in hex
+
+##### `rgb(...)` and `rgba(...)` (with bytes, so like, `rgb(127, 53, 14)`)

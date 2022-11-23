@@ -37,6 +37,12 @@ impl Palette {
 					})
 				} else {
 					let ident = ident.chars().next().unwrap();
+					if ident.is_whitespace() {
+						return Err(Error::WhitespaceColourIdentifier {
+							raw: trimmed.into(),
+						});
+					}
+
 					let colour = colour
 						.parse()
 						.map_err(|e| Error::malformed_colour(ident, e))?;
@@ -149,7 +155,23 @@ impl Tep {
 			match lines.next() {
 				None | Some((_, "")) => break,
 				Some((ln, line)) => {
-					let line_width = line.len();
+					let mut line_width = 0;
+					for ch in line.chars() {
+						if ch.is_whitespace() {
+							continue;
+						}
+
+						if palette.get(ch).is_some() {
+							line_width += 1;
+							data.push(ch);
+						} else {
+							return Err(Error::UnknownIdentifier {
+								ident: ch,
+								line_idx: line_width,
+								ln,
+							});
+						}
+					}
 
 					match width {
 						None => width = Some(line_width),
@@ -161,18 +183,6 @@ impl Tep {
 							});
 						}
 						_ => (),
-					}
-
-					for (idx, ch) in line.chars().enumerate() {
-						if palette.get(ch).is_some() {
-							data.push(ch);
-						} else {
-							return Err(Error::UnknownIdentifier {
-								ident: ch,
-								line_idx: idx,
-								ln,
-							});
-						}
 					}
 
 					height += 1;
@@ -292,6 +302,8 @@ pub enum Error {
 	PngEncodingError { error: png::EncodingError },
 	#[error("'{raw}' is not a valid colour definition")]
 	MalformedColourDefinition { raw: String },
+	#[error("You cannot use whitespace for a colour identifier, sorry: `{raw}`")]
+	WhitespaceColourIdentifier { raw: String },
 	#[error("The colour for '{ident}' is invalid: '{error}'")]
 	MalformedColour {
 		ident: char,
