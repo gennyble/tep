@@ -23,10 +23,10 @@ cargo install --path tep
 ```
 
 ### Valid colour definitions
-`short gray`: `#1` becomes `#111111`  
-`long gray`: `#12` becomes `#121212`  
-`short rgb`: `#abc` becomes `#aabbcc`  
-`short rgba`: `#abcd` becomes `#aabbccdd`  
-`long rgb`: `#abcdef`  
-`long rgba`: `#abcdef12`  
+short gray: `#1` becomes `#111111`  
+long gray: `#12` becomes `#121212`  
+short rgb: `#abc` becomes `#aabbcc`  
+short rgba: `#abcd` becomes `#aabbccdd`  
+long rgb: `#abcdef`  
+long rgba: `#abcdef12`  
 `rgb(...)` and `rgba(...)` with bytes. So like, `rgb(51,170,136)`
