@@ -1,7 +1,13 @@
 [package]
-name = "tep"
 version = "0.1.0"
+name = "tep"
+description = "Simple template library"
+license = "ACSL"
+
 edition = "2021"
+authors = ["Genny Z <gen@nyble.dev>"]
+keywords = ["image", "pixel-art"]
+categories = ["command-line-utilities", "multimedia::images", "game-development"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
