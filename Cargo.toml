@@ -2,7 +2,8 @@
 version = "0.1.0"
 name = "tep"
 description = "Simple template library"
-license = "ACSL"
+repository = "https://github.com/gennyble/tep"
+license-file = "LICENSE"
 
 edition = "2021"
 authors = ["Genny Z <gen@nyble.dev>"]
