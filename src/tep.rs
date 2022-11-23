@@ -93,11 +93,11 @@ impl FromStr for Palette {
 }
 
 pub struct Tep {
-	palette: Palette,
+	pub palette: Palette,
 
-	width: usize,
-	height: usize,
-	data: Vec<char>,
+	pub width: usize,
+	pub height: usize,
+	pub data: Vec<char>,
 }
 
 impl Tep {
@@ -440,16 +440,79 @@ impl Colour {
 		let pair = format!("{low}{high}");
 		u8::from_str_radix(&pair, 16).map_err(|_| ColourParseError::InvalidHex { raw: pair })
 	}
+
+	fn parse_rgb_inner(raw: &str, has_alpha: bool) -> Result<Colour, ColourParseError> {
+		let mut splits = raw.split(',');
+		let red = splits.next();
+		let green = splits.next();
+		let blue = splits.next();
+
+		match (red, green, blue) {
+			(None, _, _) | (_, None, _) | (_, _, None) => {
+				if !has_alpha {
+					Err(ColourParseError::RgbMissingValue { raw: raw.into() })
+				} else {
+					Err(ColourParseError::RgbaMissingValue { raw: raw.into() })
+				}
+			}
+			(Some(red_str), Some(green_str), Some(blue_str)) => {
+				let parse_str = |str: &str| -> Result<u8, ColourParseError> {
+					str.trim()
+						.parse()
+						.map_err(|_| ColourParseError::InvalidRgbValue { raw: raw.into() })
+				};
+
+				let red = parse_str(red_str)?;
+				let green = parse_str(green_str)?;
+				let blue = parse_str(blue_str)?;
+
+				if has_alpha {
+					match splits.next() {
+						None => Err(ColourParseError::RgbaMissingValue { raw: raw.into() }),
+						Some(alpha_str) => {
+							let alpha = parse_str(alpha_str)?;
+
+							Ok(Colour::rgba(red, green, blue, alpha))
+						}
+					}
+				} else {
+					Ok(Colour::rgb(red, green, blue))
+				}
+			}
+		}
+	}
 }
 
 impl FromStr for Colour {
 	type Err = ColourParseError;
 
 	fn from_str(s: &str) -> Result<Self, Self::Err> {
+		match s.strip_prefix("rgb(") {
+			None => (),
+			Some(rgb_with_end) => match s.chars().last() {
+				Some(')') => {
+					let rgb = &rgb_with_end[..rgb_with_end.len() - 1];
+					return Self::parse_rgb_inner(rgb, false);
+				}
+				None | Some(_) => return Err(ColourParseError::InvalidColour { raw: s.into() }),
+			},
+		}
+
+		match s.strip_prefix("rgba(") {
+			None => (),
+			Some(rgba_with_end) => match s.chars().last() {
+				Some(')') => {
+					let rgba = &rgba_with_end[..rgba_with_end.len() - 1];
+					return Self::parse_rgb_inner(rgba, true);
+				}
+				None | Some(_) => return Err(ColourParseError::InvalidColour { raw: s.into() }),
+			},
+		}
+
 		match s.chars().next() {
 			None => Err(ColourParseError::Empty),
 			Some('#') => Self::parse_hex(&s[1..]),
-			_ => todo!(),
+			Some(_) => Err(ColourParseError::InvalidColour { raw: s.into() }),
 		}
 	}
 }
@@ -458,8 +521,16 @@ impl FromStr for Colour {
 pub enum ColourParseError {
 	#[error("Colour was empty!")]
 	Empty,
+	#[error("{raw} is not a valid colour")]
+	InvalidColour { raw: String },
 	#[error("{raw} is not a valid hex colour code")]
 	InvalidHex { raw: String },
+	#[error("rgb(...) must have three colour values, but this does not: rgb({raw})")]
+	RgbMissingValue { raw: String },
+	#[error("rgba(...) must have four colour values, but this does not: rgba({raw})")]
+	RgbaMissingValue { raw: String },
+	#[error("{raw} is not a valid value for rgb(...)/rgba(...)")]
+	InvalidRgbValue { raw: String },
 }
 
 #[cfg(test)]
@@ -478,6 +549,8 @@ mod test {
 		let shorta = "#1234";
 		let long = "#1a2b3c";
 		let longa = "#1a2b3c4d";
+		let rgb = "rgb(64, 128, 196)";
+		let rgba = "rgba(64, 128, 196, 127)";
 
 		assert_colour_parsed(g, Colour::grey(0x11));
 		assert_colour_parsed(lg, Colour::grey(0x1a));
@@ -485,5 +558,7 @@ mod test {
 		assert_colour_parsed(shorta, Colour::rgba(0x11, 0x22, 0x33, 0x44));
 		assert_colour_parsed(long, Colour::rgb(0x1a, 0x2b, 0x3c));
 		assert_colour_parsed(longa, Colour::rgba(0x1a, 0x2b, 0x3c, 0x4d));
+		assert_colour_parsed(rgb, Colour::rgb(64, 128, 196));
+		assert_colour_parsed(rgba, Colour::rgba(64, 128, 196, 127));
 	}
 }
