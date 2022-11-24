@@ -1,8 +1,7 @@
 mod cli;
-mod tep;
 
 use cli::CliArgs;
-use tep::{Palette, Tep};
+use tepimg::{Palette, Tep};
 
 fn main() {
 	let cli = match CliArgs::parse() {
